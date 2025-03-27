@@ -3,7 +3,7 @@ const CONFIG = {
     discussionBatchSize: 50,
     commentBatchSize: 200,
     retryTimeout: 10000,
-    mutationTimeout: 2500
+    mutationTimeout: 4000
 };
 
 async function processElements(selector, containerSelector, label, batchSize) {
