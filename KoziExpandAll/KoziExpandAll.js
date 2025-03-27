@@ -1,22 +1,22 @@
-﻿// KoziBackupHack.js V2.1 by Noel-50
+﻿// KoziExpandAll.js V2.1 by Noel-50
 const CONFIG = {
     discussionBatchSize: 50,
-    commentBatchSize: 20,
-    retryTimeout: 2000,
-    mutationTimeout: 5000
+    commentBatchSize: 200,
+    retryTimeout: 10000,
+    mutationTimeout: 2500
 };
 
 async function processElements(selector, containerSelector, label, batchSize) {
     let pass = 1;
     let elements;
 
-    console.log(`\n🔧 Batch size for ${label}: ${batchSize}`);
+    console.log(`🔧 Batch size for ${label}: ${batchSize}`);
 
     do {
         elements = Array.from(document.querySelectorAll(selector));
         const totalElements = elements.length;
 
-        console.log(`\n🔄 Pass #${pass}: Found ${totalElements} expandable ${label}(s).`);
+        console.log(`🔄 Pass #${pass}: Found ${totalElements} expandable ${label}(s).`);
 
         if (totalElements === 0) {
             console.log(`✅ No more ${label}s to process.`);
@@ -88,8 +88,17 @@ function waitForNewContent(targetSelector) {
 
 // Load partial discussions and comments
 async function runScript() {
-    await processElements("button.kz-post-discussion--comments-loadmore", ".kz-post-description", "discussion", CONFIG.discussionBatchSize);
-    await processElements(".read-more-cta .read-more-span", ".kz-post-description", "comment", CONFIG.commentBatchSize);
+    await processElements(
+        "button.kz-post-discussion--comments-loadmore", 
+        ".kz-post-description", 
+        "discussion", 
+        CONFIG.discussionBatchSize);
+    
+    await processElements(
+        ".read-more-cta .read-more-span", 
+        ".kz-post-description", 
+        "comment", 
+        CONFIG.commentBatchSize);
 }
 
 // Hide unwanted elements
