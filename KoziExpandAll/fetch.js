@@ -1,4 +1,4 @@
-fetch("https://raw.githubusercontent.com/noeldev/KoziExpandAll/main/KoziExpandAll.js")
-    .then(response => response.text())
-    .then(script => eval(script))
-    .catch(error => console.error("Failed to load script:", error));
+const script = document.createElement("script");
+script.src = "https://cdn.jsdelivr.net/gh/noeldev/KoziExpandAll/KoziExpandAll/KoziExpandAll.js";
+script.onload = () => console.log("Script loaded from jsDelivr!");
+document.body.appendChild(script);
