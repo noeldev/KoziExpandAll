@@ -1,9 +1,9 @@
 ﻿// KoziExpandAll.js (V2.2 OOP) by Noel-50
 const CONFIG = {
-    discussionBatchSize: 30,
+    discussionBatchSize: 20,
     commentBatchSize: 50,
-    retryTimeout: 10000,
-    mutationTimeout: 8000
+    retryTimeout: 30000,
+    mutationTimeout: 6000
 };
 
 class Expander {
