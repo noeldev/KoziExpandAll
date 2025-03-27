@@ -1,4 +1,4 @@
-﻿// KoziExpandAll.js V2.1 by Noel-50
+﻿// KoziExpandAll.js (V2.2 OOP) by Noel-50
 const CONFIG = {
     discussionBatchSize: 50,
     commentBatchSize: 200,
@@ -6,66 +6,70 @@ const CONFIG = {
     mutationTimeout: 4000
 };
 
-async function processElements(selector, containerSelector, label, batchSize) {
-    let pass = 1;
-    let elements;
+class Expander {
+    constructor(selector, containerSelector, label, batchSize) {
+        this.selector = selector;
+        this.containerSelector = containerSelector;
+        this.label = label;
+        this.batchSize = batchSize;
+    }
 
-    console.log(`🔧 Batch size for ${label}: ${batchSize}`);
+    async process() {
+        let pass = 1;
 
-    do {
-        elements = Array.from(document.querySelectorAll(selector));
-        const totalElements = elements.length;
+        while (true) {
+            const elements = Array.from(document.querySelectorAll(this.selector));
+            if (elements.length === 0) {
+                console.log(`✅ No more ${this.label}s to process.`);
+                break;
+            }
 
-        console.log(`🔄 Pass #${pass}: Found ${totalElements} expandable ${label}(s).`);
-
-        if (totalElements === 0) {
-            console.log(`✅ No more ${label}s to process.`);
-            return;
+            console.log(`🔄 Pass #${pass}: Found ${elements.length} expandable ${this.label}(s).`);
+            await this.processBatches(elements);
+            pass++;
         }
 
-        const totalBatches = Math.ceil(totalElements / batchSize);
+        console.log(`✅ All passes completed for ${this.label}.`);
+    }
 
-        for (let i = 0; i < totalElements; i += batchSize) {
-            const batch = elements.slice(i, i + batchSize);
-            const batchNumber = Math.floor(i / batchSize) + 1;
+    async processBatches(elements) {
+        const totalElements = elements.length;
+        const totalBatches = Math.ceil(totalElements / this.batchSize);
 
-            console.log(`🚀 Processing batch ${batchNumber}/${totalBatches} (${batch.length} elements)...`);
+        for (let i = 0; i < totalElements; i += this.batchSize) {
+            const batch = elements.slice(i, i + this.batchSize);
+            console.log(`🚀 Processing batch ${Math.floor(i / this.batchSize) + 1}/${totalBatches} (${batch.length} elements)...`);
 
             try {
-                await Promise.all(batch.map((button, index) => {
-                    const elementIndex = i + index + 1;
-                    return clickAndWait(button, containerSelector, elementIndex, totalElements, label);
-                }));
+                await Promise.all(batch.map((button, index) =>
+                    this.clickAndWait(button, i + index + 1, totalElements)
+                ));
             } catch (error) {
-                console.error(`❌ Error while processing ${label} batch; retrying...`);
-                await new Promise(resolve => setTimeout(resolve, CONFIG.retryTimeout));
+                console.error(`❌ Error while processing ${this.label} batch; retrying...`);
+                await this.wait(CONFIG.retryTimeout);
             }
         }
+    }
 
-        pass++;
-    } while (elements.length > 0);
+    async clickAndWait(button, index, total) {
+        const buttonText = button.textContent.trim();
+        console.log(`📤 (${index}/${total}) Processing '${buttonText}'...`);
+        button.click();
+        await waitForNewContent(this.containerSelector);
+    }
 
-    console.log(`✅ All passes completed for ${label}.`);
-}
-
-async function clickAndWait(button, containerSelector, index, total, label) {
-    const buttonText = button.textContent.trim();
-
-    console.log(`📤 (${index}/${total}) Processing '${buttonText}'...`);
-    button.click();
-    await waitForNewContent(containerSelector);
+    wait(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
 }
 
 function waitForNewContent(targetSelector) {
     return new Promise((resolve) => {
         const observer = new MutationObserver((mutationsList, observer) => {
-            for (const mutation of mutationsList) {
-                if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
-                    observer.disconnect();
-                    console.log("✅ New element detected, skipping...");
-                    resolve();
-                    return;
-                }
+            if (mutationsList.some(m => m.type === "childList" && m.addedNodes.length > 0)) {
+                observer.disconnect();
+                console.log("✅ New element detected, skipping...");
+                resolve();
             }
         });
 
@@ -86,25 +90,13 @@ function waitForNewContent(targetSelector) {
     });
 }
 
-// Load partial discussions and comments
 async function runScript() {
-    await processElements(
-        "button.kz-post-discussion--comments-loadmore", 
-        ".kz-post-description", 
-        "discussion", 
-        CONFIG.discussionBatchSize);
-    
-    await processElements(
-        ".read-more-cta .read-more-span", 
-        ".kz-post-description", 
-        "comment", 
-        CONFIG.commentBatchSize);
+    await new Expander("button.kz-post-discussion--comments-loadmore", ".kz-post-description", "discussion", CONFIG.discussionBatchSize).process();
+    await new Expander(".read-more-cta .read-more-span", ".kz-post-description", "comment", CONFIG.commentBatchSize).process();
 }
 
-// Hide unwanted elements
-document.querySelector(".kz-header")?.style.setProperty("display", "none");
-document.querySelector(".kz-navbar.ng-star-inserted")?.style.setProperty("display", "none");
-document.querySelector("app-countdown-timer .maintenance")?.style.setProperty("display", "none");
+// Hide UI elements
+[".kz-header", ".kz-navbar.ng-star-inserted", "app-countdown-timer .maintenance"]
+    .forEach(selector => document.querySelector(selector)?.style.setProperty("display", "none"));
 
-// Entry point
 runScript();
