@@ -1,10 +1,28 @@
-﻿// KoziExpandAll.js (V2.2 OOP) by Noel-50
-const CONFIG = {
+﻿// KoziExpandAll.js by Noel-50
+// 2.3 - Integrated auto-scrolling functions
+// 2.2 - Created an Expander class (OOP)
+// 2.1 - Some fixes
+// 2.0 - First release
+
+const DEBUG = localStorage.getItem("DEBUG") === "true";
+
+const CONFIG = DEBUG ? {
+    discussionBatchSize: 50,
+    commentBatchSize: 200,
+    retryTimeout: 10000,
+    mutationTimeout: 3500,
+    scrollDelay: 300,
+    maxScrollAttempts: 20
+} : {
     discussionBatchSize: 20,
     commentBatchSize: 50,
     retryTimeout: 30000,
-    mutationTimeout: 6000
+    mutationTimeout: 8000,
+    scrollDelay: 500,
+    maxScrollAttempts: 50
 };
+
+console.log("CONFIG:", CONFIG);
 
 class Expander {
     constructor(selector, containerSelector, label, batchSize) {
@@ -90,12 +108,62 @@ function waitForNewContent(targetSelector) {
     });
 }
 
-async function runScript() {
-    await new Expander("button.kz-post-discussion--comments-loadmore", ".kz-post-description", "discussion", CONFIG.discussionBatchSize).process();
-    await new Expander(".read-more-cta .read-more-span", ".kz-post-description", "comment", CONFIG.commentBatchSize).process();
+async function fetchStory() {
+    let lastHeight = 0;
+    let newHeight = document.body.scrollHeight;
+    let attempts = 0;
+
+    console.log("🔽 Scrolling to load the whole story...");
+
+    while (attempts < CONFIG.maxScrollAttempts) {
+        window.scrollTo(0, newHeight);
+        await new Promise(resolve => setTimeout(resolve, CONFIG.scrollDelay));
+
+        lastHeight = newHeight;
+        newHeight = document.body.scrollHeight;
+
+        if (newHeight === lastHeight) {
+            attempts++;
+        } else {
+            attempts = 0;
+        }
+    }
+
+    console.log("✅ Story fully loaded.");
 }
 
-// Hide UI elements
+async function loadAllImages(scrollStep = 300, scrollDelay = 50) {
+    console.log("🔼 Scrolling to top...");
+    window.scrollTo(0, 0);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    while (window.scrollY > 0) {
+        window.scrollTo(0, 0);
+        await new Promise(resolve => setTimeout(resolve, 200));
+    }
+
+    console.log("🔽 Scrolling down to trigger image loading...");
+    let scrollPosition = 0;
+    let pageHeight = document.body.scrollHeight;
+
+    while (scrollPosition < pageHeight) {
+        scrollPosition += scrollStep;
+        window.scrollTo(0, scrollPosition);
+        await new Promise(resolve => setTimeout(resolve, scrollDelay));
+    }
+
+    console.log("✅ Image loading complete.");
+}
+
+async function runScript() {
+    await fetchStory();
+
+    await new Expander("button.kz-post-discussion--comments-loadmore", ".kz-post-description", "discussion", CONFIG.discussionBatchSize).process();
+    await new Expander(".read-more-cta .read-more-span", ".kz-post-description", "comment", CONFIG.commentBatchSize).process();
+
+    await loadAllImages();
+    console.log("🎉 Process is complete.");
+}
+
 [".kz-header", ".kz-navbar.ng-star-inserted", "app-countdown-timer .maintenance"]
     .forEach(selector => document.querySelector(selector)?.style.setProperty("display", "none"));
 
