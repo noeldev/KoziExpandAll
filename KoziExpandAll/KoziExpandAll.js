@@ -1,4 +1,5 @@
 ﻿// KoziExpandAll.js by Noel-50
+// 2.4 - Improved code to hide elements
 // 2.3 - Integrated auto-scrolling functions
 // 2.2 - Created an Expander class (OOP)
 // 2.1 - Some fixes
@@ -164,7 +165,20 @@ async function runScript() {
     console.log("🎉 Process is complete.");
 }
 
-[".kz-header", ".kz-navbar.ng-star-inserted", "app-countdown-timer .maintenance"]
-    .forEach(selector => document.querySelector(selector)?.style.setProperty("display", "none"));
+const hideElements = (selectors) => {
+    selectors.forEach(selector => {
+        document.querySelector(selector)?.style.setProperty("display", "none");
+    });
+};
 
-runScript();
+hideElements([
+    ".kz-header",
+    ".kz-navbar.ng-star-inserted",
+    ".kz-navbar",
+    ".kz-kaza--options",
+    ".kz-kaza-header--user-more.ng-star-inserted",
+    "app-countdown-timer .maintenance",
+    "app-footer"
+]);
+
+await runScript();
