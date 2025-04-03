@@ -1,4 +1,5 @@
 ﻿// KoziExpandAll.js by Noel-50
+// 2.5 - Fixed Uncaught SyntaxError
 // 2.4 - Improved code to hide elements
 // 2.3 - Integrated auto-scrolling functions
 // 2.2 - Created an Expander class (OOP)
@@ -162,7 +163,6 @@ async function runScript() {
     await new Expander(".read-more-cta .read-more-span", ".kz-post-description", "comment", CONFIG.commentBatchSize).process();
 
     await loadAllImages();
-    console.log("🎉 Process is complete.");
 }
 
 const hideElements = (selectors) => {
@@ -181,4 +181,4 @@ hideElements([
     "app-footer"
 ]);
 
-await runScript();
+runScript().then(() => console.log("🎉 Process is complete."));
