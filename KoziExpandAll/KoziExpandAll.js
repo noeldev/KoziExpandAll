@@ -1,10 +1,5 @@
 ﻿// KoziExpandAll.js by Noel-50
-// 2.5 - Fixed Uncaught SyntaxError
-// 2.4 - Improved code to hide elements
-// 2.3 - Integrated auto-scrolling functions
-// 2.2 - Created an Expander class (OOP)
-// 2.1 - Some fixes
-// 2.0 - First release
+// Version: 2025-04-04 05:10
 
 const DEBUG = localStorage.getItem("DEBUG") === "true";
 
@@ -110,7 +105,19 @@ function waitForNewContent(targetSelector) {
     });
 }
 
+async function scrollToTop() {
+    console.log("🔼 Scrolling to top...");
+    window.scrollTo(0, 0);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    while (window.scrollY > 0) {
+        window.scrollTo(0, 0);
+        await new Promise(resolve => setTimeout(resolve, 200));
+    }
+}
+
 async function fetchStory() {
+    await scrollToTop();
+
     let lastHeight = 0;
     let newHeight = document.body.scrollHeight;
     let attempts = 0;
@@ -135,13 +142,7 @@ async function fetchStory() {
 }
 
 async function loadAllImages(scrollStep = 300, scrollDelay = 50) {
-    console.log("🔼 Scrolling to top...");
-    window.scrollTo(0, 0);
-    await new Promise(resolve => setTimeout(resolve, 500));
-    while (window.scrollY > 0) {
-        window.scrollTo(0, 0);
-        await new Promise(resolve => setTimeout(resolve, 200));
-    }
+    await scrollToTop();
 
     console.log("🔽 Scrolling down to trigger image loading...");
     let scrollPosition = 0;
